@@ -287,7 +287,7 @@ namespace KantanDocGen
 			string OutputIndexPath = Path.Combine(OutputDir, "index.html");
 			IndexXform.TransformXml(Path.Combine(IntermediateDir, "index.xml"), OutputIndexPath);
 
-			// @TODO: Copy DocGenProgramDir/style directory to output
+			CopyWholeDirectory(Path.Combine(DocGenProgramDir, "css"), Path.Combine(OutputDir, "css"));
 
 			Console.WriteLine("KantanDocGen completed:");
 			Console.WriteLine("{0} node docs successfully transformed.", Success);
