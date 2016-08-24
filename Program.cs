@@ -253,17 +253,21 @@ namespace KantanDocGen
 			foreach (string Sub in SubFolders)
 			{
 				string ClassTitle = Path.GetFileName(Sub);
+				string OutputClassDir = Path.Combine(OutputDir, ClassTitle);
+				SafeCreateDirectory(OutputClassDir);
 				string NodeDir = Path.Combine(Sub, "nodes");
 				if (Directory.Exists(NodeDir))
 				{
-					string OutputSubDir = Path.Combine(OutputDir, ClassTitle);
-					SafeCreateDirectory(OutputSubDir);
+					//					string OutputSubDir = Path.Combine(OutputDir, ClassTitle);
+					//					SafeCreateDirectory(OutputSubDir);
+					string OutputNodesDir = Path.Combine(OutputClassDir, "nodes");
+					SafeCreateDirectory(OutputNodesDir);
 
 					var InputFiles = Directory.EnumerateFiles(NodeDir, "*.xml", SearchOption.TopDirectoryOnly);
 					foreach (string FilePath in InputFiles)
 					{
 						string FileTitle = Path.GetFileNameWithoutExtension(FilePath);
-						string OutputPath = Path.Combine(OutputSubDir, FileTitle + ".html");
+						string OutputPath = Path.Combine(OutputNodesDir, FileTitle + ".html");
 
 						string InputPath = FilePath;
 						if (!NodeXform.TransformXml(InputPath, OutputPath))
@@ -276,12 +280,12 @@ namespace KantanDocGen
 						++Success;
 					}
 
-					string OutputClassPath = Path.Combine(OutputDir, ClassTitle + ".html");
+					string OutputClassPath = Path.Combine(OutputClassDir, ClassTitle + ".html");
 					ClassXform.TransformXml(Path.Combine(Sub, ClassTitle + ".xml"), OutputClassPath);
 				}
 
 				// Copy the images for this class to the output directory
-				CopyWholeDirectory(Path.Combine(Sub, "img"), Path.Combine(OutputDir, ClassTitle, "img"));
+				CopyWholeDirectory(Path.Combine(Sub, "img"), Path.Combine(OutputClassDir, "img"));
 			}
 
 			string OutputIndexPath = Path.Combine(OutputDir, "index.html");
