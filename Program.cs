@@ -1,4 +1,8 @@
-﻿// Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
+﻿/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Copyright (C) 2016 Cameron Angus. All Rights Reserved.
 
 using System;
 using System.Collections;
@@ -96,6 +100,8 @@ namespace KantanDocGen
 			}
 		}
 
+		// @NOTE: Currently unused, seemingly no way to use Slate for the node rendering when running commandlet.
+		// Instead this tool is now invoked by a plugin.
 		static bool RunXmlDocGenCommandlet(string EngineDir, string EditorPath, string OutputDir)
 		{
 			// Create the output directory
@@ -156,17 +162,18 @@ namespace KantanDocGen
 			}
 
 			// Get the default paths
-			string EngineDir = ParseArgumentDirectory(ArgumentList, "-enginedir=", Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "..\\.."));
-			string OutputDir = ParseArgumentDirectory(ArgumentList, "-outputdir=", Directory.GetCurrentDirectory());
-			OutputDir = Path.Combine(OutputDir, DocsTitle);
 
-			string DocGenProgramDir = Path.Combine(EngineDir, "Programs", Assembly.GetExecutingAssembly().GetName().Name);
+			// If unspecified, assume the directory containing our binary is one level below the base directory
+			string DocGenBaseDir = ParseArgumentDirectory(ArgumentList, "-basedir=", Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), ".."));
+			string OutputRoot = ParseArgumentDirectory(ArgumentList, "-outputdir=", Directory.GetCurrentDirectory());
+			string OutputDir = Path.Combine(OutputRoot, DocsTitle);
 
 			//string MsxslPath = ParseArgumentPath(ArgumentList, "-xslproc=", Path.Combine(EngineDir, "Binaries/ThirdParty/Msxsl/msxsl.exe"));
 
-			string IndexTransformPath = ParseArgumentPath(ArgumentList, "-indexxsl=", Path.Combine(EngineDir, DocGenProgramDir, "xslt/index_xform.xsl"));
-			string ClassTransformPath = ParseArgumentPath(ArgumentList, "-classxsl=", Path.Combine(EngineDir, DocGenProgramDir, "xslt/class_docs_xform.xsl"));
-			string NodeTransformPath = ParseArgumentPath(ArgumentList, "-nodexsl=", Path.Combine(EngineDir, DocGenProgramDir, "xslt/node_docs_xform.xsl"));
+			// Xsl transform files - if not specified explicitly, look for defaults relative to base directory
+			string IndexTransformPath = ParseArgumentPath(ArgumentList, "-indexxsl=", Path.Combine(DocGenBaseDir, "xslt/index_xform.xsl"));
+			string ClassTransformPath = ParseArgumentPath(ArgumentList, "-classxsl=", Path.Combine(DocGenBaseDir, "xslt/class_docs_xform.xsl"));
+			string NodeTransformPath = ParseArgumentPath(ArgumentList, "-nodexsl=", Path.Combine(DocGenBaseDir, "xslt/node_docs_xform.xsl"));
 
 			bool bFromIntermediate = ArgumentList.Contains("-fromintermediate");
 			string IntermediateDir;
@@ -193,7 +200,7 @@ namespace KantanDocGen
 				Console.WriteLine("KantanDocGen: Error: Calling without -fromintermediate currently not supported. Use the KantanDocGen engine plugin to generate documentation.");
 				return;
 
-				IntermediateDir = ParseArgumentDirectory(ArgumentList, "-intermediatedir=", Path.Combine(EngineDir, "Intermediate\\KantanDocGen"));
+/*				IntermediateDir = ParseArgumentDirectory(ArgumentList, "-intermediatedir=", Path.Combine(EngineDir, "Intermediate\\KantanDocGen"));
 
 				// Need to generate intermediate docs first
 				// Run editor commandlet to generate XML and image files
@@ -202,7 +209,7 @@ namespace KantanDocGen
 				{
 					return;
 				}
-			}
+*/			}
 
 			const bool bCleanOutput = true;
 			bool bHardClean = ArgumentList.Contains("-cleanoutput");
@@ -258,8 +265,6 @@ namespace KantanDocGen
 				string NodeDir = Path.Combine(Sub, "nodes");
 				if (Directory.Exists(NodeDir))
 				{
-					//					string OutputSubDir = Path.Combine(OutputDir, ClassTitle);
-					//					SafeCreateDirectory(OutputSubDir);
 					string OutputNodesDir = Path.Combine(OutputClassDir, "nodes");
 					SafeCreateDirectory(OutputNodesDir);
 
@@ -291,7 +296,7 @@ namespace KantanDocGen
 			string OutputIndexPath = Path.Combine(OutputDir, "index.html");
 			IndexXform.TransformXml(Path.Combine(IntermediateDir, "index.xml"), OutputIndexPath);
 
-			CopyWholeDirectory(Path.Combine(DocGenProgramDir, "css"), Path.Combine(OutputDir, "css"));
+			CopyWholeDirectory(Path.Combine(DocGenBaseDir, "css"), Path.Combine(OutputDir, "css"));
 
 			Console.WriteLine("KantanDocGen completed:");
 			Console.WriteLine("{0} node docs successfully transformed.", Success);
